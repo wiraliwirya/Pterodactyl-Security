@@ -13,7 +13,7 @@ Project ini menyediakan skrip instalasi otomatis untuk meningkatkan keamanan dan
 <br>
 <a href="https://github.com/liwirya">
   <img src="https://github.com/liwirya.png" width="100px;" alt="liwirya"/><br />
-  <sub><b>mwildanhidayat</b></sub>
+  <sub><b>liwirya</b></sub>
 </a>
 
 </div>
