@@ -176,7 +176,7 @@ class ServerCreationService
 
             if (!empty($errors)) {
                 $message = "Waduh! Gagal bikin server nih:\n\n" . implode("\n", $errors);
-                $message .= "\n\nCatatan: Cuma super admin yang bisa bikin server unlimited. Lu cuma admin biasa bro!";
+                $message .= "\n\nCatatan: Cuma admin utama (01) yang bisa bikin server unlimited. Lu cuma admin biasa bro!";
                 
                 abort(403, $message);
             }
