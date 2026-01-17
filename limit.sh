@@ -423,7 +423,7 @@ PHPEOF
 }
 
 install_files() {
-    header "INSTALASI PEMBATASAN SERVER"
+    header "INSTALASI PEMBATASAN PEMBUATAN SERVER PTERODACTYL"
     
     local files_installed=0
     
