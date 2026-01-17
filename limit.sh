@@ -1,4 +1,3 @@
-#!/bin/bash
 
 set -euo pipefail
 
@@ -45,7 +44,7 @@ warn() {
 }
 
 check_requirements() {
-    info "mengecek sistem requirements..."
+    info "Checking system requirements..."
     
     if [[ $EUID -ne 0 ]]; then
         error "Script ini harus dijalankan sebagai root!"
@@ -62,7 +61,7 @@ check_requirements() {
         exit 1
     fi
     
-    success "sistem requirements OK"
+    success "System requirements OK"
 }
 
 backup_file() {
@@ -85,8 +84,10 @@ namespace Pterodactyl\Services\Servers;
 
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Arr;
+use Pterodactyl\Models\User;
 use Pterodactyl\Models\Server;
 use Illuminate\Support\Facades\Auth;
+use Pterodactyl\Exceptions\DisplayException;
 use Illuminate\Database\ConnectionInterface;
 use Pterodactyl\Models\Objects\DeploymentObject;
 use Pterodactyl\Repositories\Eloquent\ServerRepository;
@@ -151,7 +152,7 @@ class ServerCreationService
         $user = Auth::user();
         
         if (!$user) {
-            abort(401, 'Eh, lu belum login nih!');
+            throw new DisplayException('Eh, lu belum login nih!');
         }
 
         if ($user->id !== 1) {
@@ -162,22 +163,22 @@ class ServerCreationService
             $errors = [];
 
             if ($memory === 0) {
-                $errors[] = 'RAM gak boleh unlimited (0 MB). Minimal kasih 128 MB lah!';
+                $errors[] = '- RAM gak boleh unlimited (0 MB). Minimal kasih 128 MB lah!';
             }
 
             if ($disk === 0) {
-                $errors[] = 'Disk gak boleh unlimited (0 MB). Minimal kasih 512 MB!';
+                $errors[] = '- Disk gak boleh unlimited (0 MB). Minimal kasih 512 MB!';
             }
 
             if ($cpu === 0) {
-                $errors[] = 'CPU gak boleh unlimited (0%). Minimal kasih 50% dong!';
+                $errors[] = '- CPU gak boleh unlimited (0%). Minimal kasih 50% dong!';
             }
 
             if (!empty($errors)) {
-                $message = "Waduh! Gagal bikin server nih:\n\n" . implode("\n", $errors);
-                $message .= "\n\nCatatan: Cuma admin utama (01) yang bisa bikin server unlimited. Lu cuma admin biasa bro!";
+                $errorList = implode(' ', $errors);
+                $message = 'WADUH! GAGAL BIKIN SERVER NIH: ' . strtoupper($errorList) . ' CATATAN: CUMA ADMIN UTAMA (01) YANG BISA BIKIN SERVER UNLIMITED. LU CUMA ADMIN BIASA BRO!';
                 
-                abort(403, $message);
+                throw new DisplayException($message);
             }
         }
     }
@@ -232,6 +233,7 @@ use Illuminate\Support\Arr;
 use Webmozart\Assert\Assert;
 use Pterodactyl\Models\Server;
 use Illuminate\Support\Facades\Auth;
+use Pterodactyl\Exceptions\DisplayException;
 use Illuminate\Database\ConnectionInterface;
 use Pterodactyl\Repositories\Eloquent\ServerRepository;
 use Pterodactyl\Repositories\Wings\DaemonServerRepository;
@@ -246,6 +248,9 @@ class BuildModificationService
     ) {
     }
 
+    /**
+     * Update resource allocation dengan validasi limit
+     */
     public function handle(Server $server, array $data): Server
     {
         $this->validateResourceLimits($server, $data);
@@ -292,7 +297,7 @@ class BuildModificationService
         $user = Auth::user();
         
         if (!$user) {
-            abort(401, 'Authentication required.');
+            throw new DisplayException('Authentication required.');
         }
 
         if ($user->id === 1) {
@@ -306,22 +311,22 @@ class BuildModificationService
         $errors = [];
 
         if ($newMemory === 0) {
-            $errors[] = 'RAM gak boleh diubah jadi unlimited (0 MB)!';
+            $errors[] = '- RAM gak boleh diubah jadi unlimited (0 MB)!';
         }
 
         if ($newDisk === 0) {
-            $errors[] = 'Disk gak boleh diubah jadi unlimited (0 MB)!';
+            $errors[] = '- Disk gak boleh diubah jadi unlimited (0 MB)!';
         }
 
         if ($newCpu === 0) {
-            $errors[] = 'CPU gak boleh diubah jadi unlimited (0%)!';
+            $errors[] = '- CPU gak boleh diubah jadi unlimited (0%)!';
         }
 
         if (!empty($errors)) {
-            $message = "Gagal update server build:\n\n" . implode("\n", $errors);
-            $message .= "\n\nInfo: Cuma admin utama (ID 1) yang bisa set resource unlimited.";
+            $errorList = implode(' ', $errors);
+            $message = 'GAGAL UPDATE SERVER BUILD: ' . strtoupper($errorList) . ' INFO: CUMA admin utama (ID 1) YANG BISA SET RESOURCE UNLIMITED.';
             
-            abort(403, $message);
+            throw new DisplayException($message);
         }
     }
 
@@ -400,7 +405,6 @@ class ServerController extends Controller
     {
         $user = Auth::user();
         
-        // Info penting buat admin biasa
         $limitInfo = null;
         if ($user && $user->id !== 1) {
             $limitInfo = 'Perhatian: Lu gak bisa bikin server dengan resource unlimited (RAM/CPU/Disk = 0). Cuma admin utama yang bisa!';
@@ -422,7 +426,7 @@ PHPEOF
 }
 
 install_files() {
-    header "INSTALASI PEMBATASAN PEMBUATAN SERVER PTERODACTYL"
+    header "INSTALASI RESOURCE LIMITER"
     
     local files_installed=0
     
@@ -479,7 +483,7 @@ show_summary() {
     header "INSTALASI SELESAI!"
     
     echo ""
-    echo -e "${C_GREEN}${C_BOLD}Yeay! Penbatasan Limit Pembuatan Server udah terinstall nih! 🎉${C_RESET}"
+    echo -e "${C_GREEN}${C_BOLD}Yeay! Resource Limiter udah terinstall nih! 🎉${C_RESET}"
     echo ""
     
     info "FITUR YANG AKTIF:"
@@ -524,12 +528,13 @@ show_summary() {
     echo "  - Kalo mau rollback, restore file dari backup"
     echo ""
     
-    success "Semua Selesai! Selamat menggunakan scriptnya! 🚀"
+    success "All done! Selamat menggunakan Resource Limiter! 🚀"
     echo ""
 }
 
+
 main() {
-    header "PEMBATASAN PEMBUATAN SERVER PTERODACTLY"
+    header "PTERODACTYL PEMBATASAN PEMHUATAN SERVER INSTALLER"
     
     info "Mulai instalasi di: $(date)"
     info "Log file: $LOG_FILE"
