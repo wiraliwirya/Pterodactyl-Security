@@ -1,86 +1,85 @@
-# Pterodactyl Security Enhancer
+# Pterodactyl Security & Resource Limiter
 
-![Pterodactyl Security](https://img.shields.io/badge/Security-Hardened-green?style=flat-square) ![Version](https://img.shields.io/badge/Version-3.0.0-blue?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+![Bash](https://img.shields.io/badge/Language-Bash-green?style=flat-square)
+![Pterodactyl](https://img.shields.io/badge/Platform-Pterodactyl-blueviolet?style=flat-square)
 
-**Pterodactyl Security** adalah skrip instalasi otomatis berbasis Bash yang dirancang untuk memperketat keamanan pada panel Pterodactyl Anda. Skrip ini memodifikasi _core files_ Pterodactyl untuk menerapkan kontrol akses (RBAC) yang lebih ketat, memastikan bahwa tindakan kritis hanya dapat dilakukan oleh **Root Administrator**.
+**Pterodactyl Security & Resource Limiter** adalah kumpulan *tools* otomatisasi berbasis Bash untuk meningkatkan keamanan dan manajemen resource pada panel Pterodactyl Anda. Project ini terdiri dari dua modul utama:
+1. **Security Enhancer**: Memperketat *Role-Based Access Control* (RBAC) untuk memastikan hanya **Root Admin** yang dapat melakukan tindakan kritis.
+2. **Resource Limiter**: Mencegah pembuatan server dengan resource *unlimited* (0 MB/0%) oleh admin biasa.
 
-Project ini sangat berguna bagi pemilik hosting game atau administrator sistem yang ingin mencegah akses tidak sah atau modifikasi data oleh sub-user atau admin yang tidak memiliki hak penuh (Root Admin).
+Solusi ini sangat ideal untuk penyedia hosting game yang ingin mencegah penyalahgunaan akses oleh staff atau sub-admin.
 
 ## 🌟 Fitur Utama
 
-Skrip ini secara otomatis mengganti dan memodifikasi _controller_ dan _service_ Pterodactyl untuk menambahkan validasi keamanan:
+### 🛡️ Security Enhancer (`install.sh`)
+Modul ini memodifikasi *core files* untuk membatasi akses berikut hanya kepada **Root Administrator (ID: 1)**:
+* **Penghapusan Server:** Mencegah admin biasa menghapus server sembarangan.
+* **Manajemen User:** Hanya Root Admin yang bisa membuat, mengedit, atau menghapus user.
+* **Infrastruktur:** Pengaturan *Locations*, *Nodes*, dan *Nests* terkunci.
+* **Panel Settings:** Mencegah perubahan konfigurasi global panel.
+* **File Access:** Validasi ketat kepemilikan file server melalui API.
 
-* **Proteksi Penghapusan Server:** Mencegah penghapusan server kecuali dilakukan oleh Root Admin atau Pemilik Server yang sah.
-* **Manajemen User Terproteksi:** Hanya Root Admin yang dapat membuat, mengedit, atau menghapus user lain.
-* **Keamanan Lokasi & Node:** Membatasi akses manajemen _Location_ dan _Node_ hanya untuk Root Admin.
-* **Manajemen Nests:** Pembuatan dan pengeditan Nests ("sarang" game) dikunci khusus Root Admin.
-* **Kunci Pengaturan Panel:** Mencegah perubahan pada pengaturan global panel (_Settings_) oleh non-Root Admin.
-* **Validasi Akses File:** Memastikan hanya pemilik server atau Root Admin yang dapat mengakses, mengedit, atau mengunduh file server melalui API.
-* **Sistem Backup Otomatis:** Membuat backup dari setiap file asli sebelum dimodifikasi untuk keamanan rollback.
+### ⛔ Resource Limiter (`limit.sh`)
+Modul ini memvalidasi input saat pembuatan atau edit server:
+* **No Unlimited Resources:** Admin biasa **wajib** mengisi batas RAM, Disk, dan CPU (tidak boleh `0`).
+* **Root Privilege:** Hanya Super Admin yang diizinkan membuat server dengan spesifikasi *unlimited*.
+* **Validasi Real-time:** Pengecekan dilakukan langsung saat *request* pembuatan atau update *build* server.
 
 ## 🛠️ Teknologi yang Digunakan
 
-* **Bash Scripting:** Untuk otomatisasi proses instalasi, backup, dan validasi lingkungan server.
-* **PHP 8.1+:** Bahasa pemrograman dasar Pterodactyl yang dimodifikasi.
-* **Laravel Framework:** Arsitektur backend yang digunakan oleh Pterodactyl Panel.
+* **Bash Scripting:** Otomatisasi instalasi, backup, dan pemulihan.
+* **PHP 8.1+:** Logika backend yang dimodifikasi.
+* **Laravel Framework:** Basis dari Pterodactyl Panel.
 
 ## 📋 Prasyarat Instalasi
 
-Sebelum menjalankan skrip ini, pastikan server Anda memenuhi persyaratan berikut:
-
-1.  **Akses Root:** Anda harus memiliki akses SSH sebagai user `root`.
-2.  **Pterodactyl Panel:** Panel harus sudah terinstal dan berfungsi (Default path: `/var/www/pterodactyl`).
-3.  **PHP 8.1+:** Versi PHP yang kompatibel harus terinstal di sistem.
+Sebelum menjalankan skrip, pastikan sistem Anda memenuhi syarat berikut:
+1. **Akses Root:** Wajib menggunakan user `root` atau `sudo`.
+2. **Pterodactyl Panel:** Terinstal di direktori standar (`/var/www/pterodactyl`).
+3. **PHP 8.1+:** Versi PHP yang kompatibel dengan Pterodactyl.
 
 ## 📂 Susunan Project
 
-Berikut adalah struktur file sederhana dari repository ini:
-
 ```text
 .
+├── install.sh                  # Installer modul Security Enhancer
+├── limit.sh                    # Installer modul Resource Limiter
 ├── LICENSE                     # Lisensi MIT
-├── README.md                   # Dokumentasi Project
-└── pterodactyl_installer.sh    # Skrip Instalasi Utama
+└── README.md                   # Dokumentasi Project
 
 ```
 
 ## 🚀 Cara Penggunaan
 
-Ikuti langkah-langkah berikut untuk menginstal patch keamanan ini di server Anda:
+Clone repositori ini terlebih dahulu ke server panel Anda:
 
-1. **Clone Repository atau Unduh Skrip:**
 ```bash
 git clone [https://github.com/liwirya/pterodactyl-security.git](https://github.com/liwirya/pterodactyl-security.git)
 cd pterodactyl-security
+chmod +x install.sh limit.sh
 
 ```
 
+### 1. Instalasi Security Enhancer
 
-2. **Berikan Izin Eksekusi:**
+Jalankan skrip ini untuk mengamankan fitur-fitur panel:
+
 ```bash
-chmod +x pterodactyl_installer.sh
+sudo ./install.sh
 
 ```
 
+### 2. Instalasi Resource Limiter
 
-3. **Jalankan Installer:**
-Pastikan Anda menjalankan skrip sebagai root.
+Jalankan skrip ini untuk membatasi pembuatan server unlimited:
+
 ```bash
-sudo ./pterodactyl_installer.sh
+sudo ./limit.sh
 
 ```
 
-
-4. **Verifikasi Instalasi:**
-Skrip akan menampilkan log proses. Pastikan tidak ada pesan error dan diakhiri dengan pesan `Installation completed successfully!`.
-*Log instalasi tersimpan di:* `/var/log/pterodactyl-protection-install.log`
-
-### Cara Rollback (Jika diperlukan)
-
-Skrip ini secara otomatis mem-backup file asli di direktori:
-`/var/www/pterodactyl/backups/`
-
-Format nama file backup adalah: `[nama_file_asli].backup_[TIMESTAMP]`
+> **Catatan:** Kedua skrip akan secara otomatis membuat backup dari file asli yang dimodifikasi. Jika terjadi error, Anda dapat memulihkan file dari folder backup yang dibuat (biasanya berekstensi `.backup_TIMESTAMP`).
 
 ## 👥 Kredit
 
@@ -90,16 +89,14 @@ Project ini dikembangkan dan dikelola oleh:
 <tr>
 <td align="center">
 <a href="https://www.google.com/search?q=https://github.com/liwirya">
-<img src="https://www.google.com/search?q=https://github.com/liwirya.png%3Fsize%3D100" width="100px;" alt="Wira Liwirya"/>
-<br />
-<sub><b>Wira Liwirya</b></sub>
+<img src="https://www.google.com/search?q=https://github.com/liwirya.png%3Fsize%3D100" width="100px;" alt="Liwirya"/><br />
+<sub><b>Liwirya</b></sub>
 </a>
 </td>
 <td align="center">
 <a href="https://www.google.com/search?q=https://github.com/mwildanhidayat">
-<img src="https://www.google.com/search?q=https://github.com/mwildanhidayat.png%3Fsize%3D100" width="100px;" alt="M Wildan Hidayat"/>
-<br />
-<sub><b>M Wildan Hidayat</b></sub>
+<img src="https://www.google.com/search?q=https://github.com/mwildanhidayat.png%3Fsize%3D100" width="100px;" alt="mwildanhidayat"/><br />
+<sub><b>mwildanhidayat</b></sub>
 </a>
 </td>
 </tr>
@@ -107,19 +104,20 @@ Project ini dikembangkan dan dikelola oleh:
 
 ## 🤝 Kontribusi
 
-Kontribusi sangat dipersilakan! Jika Anda menemukan bug atau ingin menambahkan fitur keamanan baru:
+Kontribusi sangat terbuka! Silakan fork repository ini dan buat *Pull Request* jika Anda memiliki perbaikan atau fitur baru.
 
-1. Fork repository ini.
-2. Buat branch fitur baru (`git checkout -b fitur-baru`).
-3. Commit perubahan Anda (`git commit -m 'Menambahkan fitur keamanan X'`).
-4. Push ke branch tersebut (`git push origin fitur-baru`).
-5. Buat Pull Request.
+1. Fork Project
+2. Buat Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit Perubahan (`git commit -m 'Add some AmazingFeature'`)
+4. Push ke Branch (`git push origin feature/AmazingFeature`)
+5. Buka Pull Request
 
 ## 📄 Lisensi
 
-Project ini didistribusikan di bawah lisensi **MIT**. Lihat file [LICENSE](https://www.google.com/search?q=LICENSE) untuk informasi lebih lanjut.
+Didistribusikan di bawah Lisensi MIT. Lihat `LICENSE` untuk informasi lebih lanjut.
 
-```
+```text
+MIT License
 Copyright (c) 2026 WIRA LIWIRYA
 
 ```
